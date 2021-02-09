@@ -1,4 +1,4 @@
-FROM golang:1.13-alpine as builder
+FROM golang:1.15-alpine as builder
 
 ARG BUILD_FLAGS
 
@@ -12,7 +12,7 @@ ADD sentry-gateway.go ./
 RUN sh -xc "GOARCH=amd64 GOOS=linux go build ${BUILD_FLAGS}"
 
 
-FROM alpine:3.11
+FROM alpine:3.13
 LABEL maintainer="Pavel Tumik <pavel.tumik@gmail.com>"
 
 COPY --from=builder /go/src/alertmanager-sentry-gateway/alertmanager-sentry-gateway /bin
