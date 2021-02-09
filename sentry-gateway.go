@@ -200,6 +200,8 @@ func run(cmd *cobra.Command, args []string) error {
 		dsn := defaultDSN
 		env := defaultEnv
 
+		foundEnvInURL := false
+
 		if sentry, err := url.Parse(sentryURL); sentryURL != "" && err == nil {
 			if token, _, ok := r.BasicAuth(); ok && r.URL.Path != "/" {
 				params := strings.Split(r.URL.Path, "/")
@@ -209,6 +211,7 @@ func run(cmd *cobra.Command, args []string) error {
 				} else if len(params) == 3 {
 					dsn = fmt.Sprintf("%s://%s@%s/%s", sentry.Scheme, token, sentry.Host, params[1])
 					env = params[2]
+					foundEnvInURL = true
 					log.Debugf("dsn: %s, url: %s, env: %s", dsn, r.URL.Path, env)
 				} else {
 					log.Errorf("Unknown number of params in url string: %s, params: %v, len: %d", r.URL.Path, params, len(params))
@@ -228,7 +231,8 @@ func run(cmd *cobra.Command, args []string) error {
 
 		for _, alert := range wh.Alerts {
 			alert_env := env
-			if envLabel != "" {
+			// extract environmnent from label only if URL did not set one already, otherwise it takes precedence
+			if envLabel != "" && !foundEnvInURL {
 				e := getSentryEnvironmentFromAlert(alert, envLabel)
 				if e != "" {
 					alert_env = e
